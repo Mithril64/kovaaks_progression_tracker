@@ -1,0 +1,60 @@
+name: Windows Portable
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-portable:
+    name: Build Windows portable zip
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Run TypeScript/Vite build
+        run: npm run build
+
+      - name: Run frontend tests
+        run: npm test
+
+      - name: Run Rust core tests
+        run: npm run rust:test
+
+      - name: Build Windows Tauri app
+        run: npm run windows:build
+
+      - name: Create portable zip
+        run: npm run windows:portable
+
+      - name: Upload portable zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: KovaaksProgressionTracker-windows-x64-portable
+          path: artifacts/windows-portable/KovaaksProgressionTracker-windows-x64-portable.zip
+          if-no-files-found: error
+
+      - name: Upload installer bundles
+        uses: actions/upload-artifact@v4
+        with:
+          name: KovaaksProgressionTracker-windows-installers
+          path: |
+            src-tauri/target/release/bundle/msi/*.msi
+            src-tauri/target/release/bundle/nsis/*.exe
+          if-no-files-found: warn

@@ -1,19 +1,31 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap ubuntu-deps node rust npm-deps playwright verify build test rust-test e2e dev linux-tauri-deps
+.PHONY: help bootstrap system-deps ubuntu-deps arch-deps node rust npm-deps playwright verify build test rust-test e2e dev linux-tauri-deps
 
 help:
 	@printf "\nKovaak's Progression Tracker\n"
-	@printf "  make bootstrap        Install WSL/Ubuntu deps, project deps, browsers, and run checks\n"
+	@printf "  make bootstrap        Install Arch/Ubuntu dev deps, project deps, browsers, and run checks\n"
 	@printf "  make verify           Run build, unit tests, Rust core tests, and Playwright smoke test\n"
 	@printf "  make dev              Start the Vite web UI\n"
-	@printf "  make ubuntu-deps      Install base Ubuntu packages\n"
+	@printf "  make system-deps      Install base packages with apt-get or pacman\n"
+	@printf "  make ubuntu-deps      Install base Ubuntu packages with apt-get\n"
+	@printf "  make arch-deps        Install base Arch packages with pacman\n"
 	@printf "  make node             Install Node.js 22 when missing or too old\n"
 	@printf "  make rust             Install Rust stable through rustup when missing\n"
 	@printf "  make linux-tauri-deps Install optional Linux WebKitGTK deps for native Tauri shell\n\n"
 
-bootstrap: ubuntu-deps node rust npm-deps playwright verify
+bootstrap: system-deps node rust npm-deps playwright verify
+
+system-deps:
+	@if command -v apt-get >/dev/null 2>&1; then \
+		$(MAKE) ubuntu-deps; \
+	elif command -v pacman >/dev/null 2>&1; then \
+		$(MAKE) arch-deps; \
+	else \
+		echo "Unsupported package manager. Install Node.js 22, npm, rustup, make, git, pkg-config, OpenSSL, and build tools manually."; \
+		exit 1; \
+	fi
 
 ubuntu-deps:
 	@if ! command -v apt-get >/dev/null 2>&1; then \
@@ -23,9 +35,19 @@ ubuntu-deps:
 	sudo apt-get update
 	sudo apt-get install -y ca-certificates curl gnupg build-essential pkg-config libssl-dev git
 
+arch-deps:
+	@if ! command -v pacman >/dev/null 2>&1; then \
+		echo "This target expects Arch Linux with pacman."; \
+		exit 1; \
+	fi
+	sudo pacman -Syu --needed --noconfirm base-devel ca-certificates curl git make nodejs npm rustup pkgconf openssl nss nspr atk at-spi2-core cups gtk3 alsa-lib libxcomposite libxdamage libxrandr mesa pango cairo libxkbcommon libdrm glib2 expat dbus
+
 node:
 	@if command -v node >/dev/null 2>&1 && [ "$$(node -p "Number(process.versions.node.split('.')[0])")" -ge 22 ]; then \
 		echo "Node $$(node --version) is already installed."; \
+	elif command -v pacman >/dev/null 2>&1; then \
+		echo "Installing Node.js and npm with pacman."; \
+		sudo pacman -S --needed --noconfirm nodejs npm; \
 	else \
 		echo "Installing Node.js 22 from NodeSource."; \
 		curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -; \
@@ -51,7 +73,11 @@ npm-deps:
 	npm ci
 
 playwright:
-	npx playwright install --with-deps chromium
+	@if command -v apt-get >/dev/null 2>&1; then \
+		npx playwright install --with-deps chromium; \
+	else \
+		npx playwright install chromium; \
+	fi
 
 verify: build test rust-test e2e
 
