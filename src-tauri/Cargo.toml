@@ -1,0 +1,40 @@
+[package]
+name = "kovaaks-progression-tracker"
+version = "0.1.0"
+description = "Local-first Kovaak's progression tracker"
+authors = ["Kovaak's Progression Tracker"]
+edition = "2021"
+rust-version = "1.78"
+
+[lib]
+name = "kovaaks_progression_tracker_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[[bin]]
+name = "kovaaks-progression-tracker"
+path = "src/main.rs"
+required-features = ["desktop"]
+
+[features]
+default = []
+desktop = ["dep:tauri", "dep:tauri-plugin-dialog"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+anyhow = "1"
+chrono = { version = "0.4", features = ["serde"] }
+csv = "1"
+dirs = "6"
+rusqlite = { version = "0.32", features = ["bundled", "chrono"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+tauri = { version = "2", features = [], optional = true }
+tauri-plugin-dialog = { version = "2", optional = true }
+thiserror = "2"
+walkdir = "2"
+
+[dev-dependencies]
+tempfile = "3"

@@ -1,0 +1,25 @@
+{
+  "id": "starter-static",
+  "name": "Starter Static",
+  "season": "Local fixture",
+  "scenarios": [
+    {
+      "scenarioName": "1wall6targets small",
+      "category": "Click Timing",
+      "thresholds": [
+        { "rank": "Bronze", "score": 700 },
+        { "rank": "Silver", "score": 800 },
+        { "rank": "Gold", "score": 900 }
+      ]
+    },
+    {
+      "scenarioName": "Pasu Small Reload",
+      "category": "Target Switching",
+      "thresholds": [
+        { "rank": "Bronze", "score": 55 },
+        { "rank": "Silver", "score": 65 },
+        { "rank": "Gold", "score": 75 }
+      ]
+    }
+  ]
+}
