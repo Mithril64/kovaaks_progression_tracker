@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "tauri": "tauri",
-    "tauri:dev": "tauri dev --features desktop",
-    "tauri:build": "tauri build --features desktop",
+    "windows:dev": "tauri dev --features desktop",
+    "windows:build": "tauri build --features desktop",
+    "rust:test": "cargo test --manifest-path src-tauri/Cargo.toml",
     "build": "tsc && vite build",
     "test": "vitest run",
     "test:ui": "vitest --environment jsdom",

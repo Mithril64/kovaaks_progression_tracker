@@ -39,14 +39,14 @@ struct AppState {
 fn detect_stats_folders() -> AppResult<Vec<String>> {
     let mut candidates = Vec::new();
 
+    if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
+        candidates.push(local_app_data.join("FPSAimTrainer/FPSAimTrainer/stats"));
+    }
+
     if let Some(profile) = std::env::var_os("USERPROFILE").map(PathBuf::from) {
         candidates.push(profile.join("AppData/Local/FPSAimTrainer/FPSAimTrainer/stats"));
         candidates.push(profile.join("AppData/LocalLow/FPSAimTrainer/FPSAimTrainer/stats"));
         candidates.push(profile.join("Documents/FPSAimTrainer/FPSAimTrainer/stats"));
-    }
-
-    if let Some(home) = dirs::home_dir() {
-        candidates.push(home.join(".steam/steam/steamapps/compatdata/824270/pfx/drive_c/users/steamuser/AppData/Local/FPSAimTrainer/FPSAimTrainer/stats"));
     }
 
     let existing = candidates

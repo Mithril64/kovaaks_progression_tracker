@@ -1,15 +1,17 @@
 # Kovaak's Progression Tracker
 
-Local-first desktop tracker for Kovaak's stats history, built with Tauri v2, React, TypeScript, and SQLite.
+Local-first Windows desktop tracker for Kovaak's stats history, built with Tauri v2, React, TypeScript, and SQLite.
+
+Windows is the supported product target. Linux is useful for frontend development and core Rust testing, but Linux desktop packages are not part of the release goal.
 
 ## Development
 
 ```bash
 npm install
-npm run tauri:dev
+npm run windows:dev
 ```
 
-For frontend-only work:
+For frontend-only work on Linux or Windows:
 
 ```bash
 npm run dev
@@ -19,7 +21,23 @@ npm run dev
 
 ```bash
 npm run build
-cd src-tauri && cargo test
+npm test
+npm run rust:test
 ```
 
-The browser-only Vite app uses mock data. The Tauri app persists imported stats to SQLite in the app data directory.
+The browser-only Vite app uses mock data. The Windows Tauri app persists imported stats to SQLite in the app data directory.
+
+## Windows Paths
+
+The app auto-detects these Windows stats folders when they exist:
+
+- `%LOCALAPPDATA%\FPSAimTrainer\FPSAimTrainer\stats`
+- `%USERPROFILE%\AppData\Local\FPSAimTrainer\FPSAimTrainer\stats`
+- `%USERPROFILE%\AppData\LocalLow\FPSAimTrainer\FPSAimTrainer\stats`
+- `%USERPROFILE%\Documents\FPSAimTrainer\FPSAimTrainer\stats`
+
+## Linux Notes
+
+On native Linux, use `npm run dev`, `npm run build`, `npm test`, and `npm run rust:test`.
+
+Running the Tauri shell natively on Linux requires Linux WebKitGTK system packages even though Linux is not a supported app target. For Windows packaging, prefer a Windows machine or WSL/CI setup specifically configured for Tauri Windows builds.
