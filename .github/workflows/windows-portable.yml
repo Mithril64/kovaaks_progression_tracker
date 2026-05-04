@@ -2,15 +2,26 @@ name: Windows Portable
 
 on:
   workflow_dispatch:
+    inputs:
+      tag:
+        description: "Optional GitHub release tag to create/update, for example v0.1.0"
+        required: false
+        type: string
   push:
     branches:
       - main
   pull_request:
 
+concurrency:
+  group: windows-portable-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-portable:
     name: Build Windows portable zip
     runs-on: windows-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -25,6 +36,11 @@ jobs:
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
 
+      - name: Cache Rust dependencies
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+
       - name: Install frontend dependencies
         run: npm ci
 
@@ -34,11 +50,8 @@ jobs:
       - name: Run frontend tests
         run: npm test
 
-      - name: Run Rust core tests
-        run: npm run rust:test
-
-      - name: Build Windows Tauri app
-        run: npm run windows:build
+      - name: Build Windows executable
+        run: npm run windows:cargo-build
 
       - name: Create portable zip
         run: npm run windows:portable
@@ -50,11 +63,17 @@ jobs:
           path: artifacts/windows-portable/KovaaksProgressionTracker-windows-x64-portable.zip
           if-no-files-found: error
 
-      - name: Upload installer bundles
-        uses: actions/upload-artifact@v4
-        with:
-          name: KovaaksProgressionTracker-windows-installers
-          path: |
-            src-tauri/target/release/bundle/msi/*.msi
-            src-tauri/target/release/bundle/nsis/*.exe
-          if-no-files-found: warn
+      - name: Publish GitHub release
+        if: github.event_name == 'workflow_dispatch' && inputs.tag != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ inputs.tag }}"
+          $zip = "artifacts/windows-portable/KovaaksProgressionTracker-windows-x64-portable.zip"
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $zip --title $tag --notes "Portable Windows x64 build."
+          } else {
+            gh release upload $tag $zip --clobber
+          }

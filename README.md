@@ -58,11 +58,21 @@ For a local native Windows build:
 
 ```powershell
 npm ci
-npm run windows:build
+npm run build
+npm run windows:cargo-build
 npm run windows:portable
 ```
 
 See [docs/windows-release.md](docs/windows-release.md).
+
+From Arch, you can trigger and download the Windows release without leaving the terminal:
+
+```bash
+gh auth login
+make github-release TAG=v0.1.0
+make github-release-watch
+make github-release-download TAG=v0.1.0
+```
 
 ## Windows Paths
 

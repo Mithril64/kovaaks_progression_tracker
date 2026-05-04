@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-.PHONY: help bootstrap system-deps ubuntu-deps arch-deps node rust npm-deps playwright verify build test rust-test e2e dev linux-tauri-deps
+.PHONY: help bootstrap system-deps ubuntu-deps arch-deps node rust npm-deps playwright verify build test rust-test e2e dev linux-tauri-deps github-release github-release-watch github-release-download
 
 help:
 	@printf "\nKovaak's Progression Tracker\n"
@@ -14,6 +14,9 @@ help:
 	@printf "  make node             Install Node.js 22 when missing or too old\n"
 	@printf "  make rust             Install Rust stable through rustup when missing\n"
 	@printf "  make linux-tauri-deps Install optional Linux WebKitGTK deps for native Tauri shell\n\n"
+	@printf "  make github-release TAG=v0.1.0          Build/publish Windows zip via GitHub Actions\n"
+	@printf "  make github-release-watch               Watch latest GitHub Actions run\n"
+	@printf "  make github-release-download TAG=v0.1.0 Download release zip to artifacts/downloaded\n\n"
 
 bootstrap: system-deps node rust npm-deps playwright verify
 
@@ -104,3 +107,21 @@ linux-tauri-deps:
 	fi
 	sudo apt-get update
 	sudo apt-get install -y libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+github-release:
+	@if [ -z "$(TAG)" ]; then \
+		echo "Usage: make github-release TAG=v0.1.0"; \
+		exit 1; \
+	fi
+	gh workflow run windows-portable.yml -f tag=$(TAG)
+
+github-release-watch:
+	gh run watch
+
+github-release-download:
+	@if [ -z "$(TAG)" ]; then \
+		echo "Usage: make github-release-download TAG=v0.1.0"; \
+		exit 1; \
+	fi
+	mkdir -p artifacts/downloaded
+	gh release download $(TAG) --pattern '*portable.zip' --dir artifacts/downloaded --clobber
