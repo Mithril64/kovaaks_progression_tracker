@@ -34,6 +34,8 @@ sha2 = "0.10"
 tauri = { version = "2", features = [], optional = true }
 tauri-plugin-dialog = { version = "2", optional = true }
 thiserror = "2"
+indexmap = { version = "2", features = ["serde"] }
+ureq = { version = "2", features = ["json"] }
 walkdir = "2"
 
 [dev-dependencies]

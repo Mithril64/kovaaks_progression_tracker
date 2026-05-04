@@ -1,0 +1,104 @@
+{
+  "benchmarkName": "xyz Smoothness",
+  "rankCalculation": "xyz",
+  "abbreviation": "xyz",
+  "color": "#A2A9AA",
+  "spreadsheetURL": "https://docs.google.com/spreadsheets/d/1mBWoSdJrGTroeAdGyXzz0PyHJjF_yt8IJEo5bCubL30",
+  "dateAdded": "2026-04-30",
+  "difficulties": [
+    {
+      "difficultyName": "Newcomer",
+      "kovaaksBenchmarkId": 1908,
+      "sharecode": "KovaaKsRocketingCleared1x1",
+      "rankColors": {
+        "Level 1": "#F3F3F3",
+        "Level 2": "#E3E3E3",
+        "Level 3": "#D2D2D2",
+        "Level 4": "#C2C2C2",
+        "Level 5": "#B2B2B2",
+        "Bonus": "#999999"
+      },
+      "categories": [
+        {
+          "categoryName": "Smoothness",
+          "color": "#666666",
+          "subcategories": [
+            { "subcategoryName": "Vertical", "scenarioCount": 4, "color": "#E6E6E6" },
+            { "subcategoryName": "Horizontal", "scenarioCount": 4, "color": "#C6C6C6" },
+            { "subcategoryName": "XYZ", "scenarioCount": 4, "color": "#A6A6A6" }
+          ]
+        }
+      ]
+    },
+    {
+      "difficultyName": "Easy",
+      "kovaaksBenchmarkId": 603,
+      "sharecode": "KovaaKsTrollingSkyblueEngine",
+      "rankColors": {
+        "Trainee": "#F6B26B",
+        "Initiate": "#FFD966",
+        "Adept": "#93C47D",
+        "Ascendant": "#A4C2F4",
+        "Virtuoso": "#8E7CC3",
+        "Prismatic": "#65F0D8"
+      },
+      "categories": [
+        {
+          "categoryName": "Smoothness",
+          "color": "#666666",
+          "subcategories": [
+            { "subcategoryName": "Vertical", "scenarioCount": 8, "color": "#E6E6E6" },
+            { "subcategoryName": "Horizontal", "scenarioCount": 8, "color": "#C6C6C6" },
+            { "subcategoryName": "XYZ", "scenarioCount": 8, "color": "#A6A6A6" }
+          ]
+        }
+      ]
+    },
+    {
+      "difficultyName": "Medium",
+      "kovaaksBenchmarkId": 2279,
+      "sharecode": "KovaaKsPushingTaggedChat",
+      "rankColors": {
+        "Sentinel": "#85FA85",
+        "Oracle": "#E37A00",
+        "Mystic": "#FFDB00",
+        "Zenith": "#9F2B68",
+        "Prismatic": "#65F0D8"
+      },
+      "categories": [
+        {
+          "categoryName": "Smoothness",
+          "color": "#666666",
+          "subcategories": [
+            { "subcategoryName": "Vertical", "scenarioCount": 8, "color": "#E6E6E6" },
+            { "subcategoryName": "Horizontal", "scenarioCount": 8, "color": "#C6C6C6" },
+            { "subcategoryName": "XYZ", "scenarioCount": 8, "color": "#A6A6A6" }
+          ]
+        }
+      ]
+    },
+    {
+      "difficultyName": "Hard",
+      "kovaaksBenchmarkId": 604,
+      "sharecode": "KovaaKsExitfragging90Pull",
+      "rankColors": {
+        "Prodigy": "#674EA7",
+        "Cerebral": "#FF8FF1",
+        "Ethereal": "#990000",
+        "Savant": "#000000",
+        "Prismatic": "#65F0D8"
+      },
+      "categories": [
+        {
+          "categoryName": "Smoothness",
+          "color": "#666666",
+          "subcategories": [
+            { "subcategoryName": "Vertical", "scenarioCount": 8, "color": "#E6E6E6" },
+            { "subcategoryName": "Horizontal", "scenarioCount": 8, "color": "#C6C6C6" },
+            { "subcategoryName": "XYZ", "scenarioCount": 8, "color": "#A6A6A6" }
+          ]
+        }
+      ]
+    }
+  ]
+}

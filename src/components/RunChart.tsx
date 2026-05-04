@@ -2,12 +2,11 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 import type { Run } from "../lib/types";
 
 export function RunChart({ runs }: { runs: Run[] }) {
-  const data = [...runs]
-    .sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime())
-    .map((run, index) => ({
+  const sortedRuns = [...runs].sort((a, b) => new Date(a.playedAt).getTime() - new Date(b.playedAt).getTime());
+  const data = sortedRuns.map((run, index) => ({
       label: new Date(run.playedAt).toLocaleDateString(),
       score: run.score,
-      pb: Math.max(...runs.slice(0, index + 1).map((candidate) => candidate.score)),
+      pb: Math.max(...sortedRuns.slice(0, index + 1).map((candidate) => candidate.score)),
     }));
 
   if (data.length === 0) {
@@ -19,7 +18,7 @@ export function RunChart({ runs }: { runs: Run[] }) {
   }
 
   return (
-    <div className="h-72 rounded border border-slate-700 bg-slate-900 p-3 shadow-subtle">
+    <div className="h-72 rounded border border-slate-700 bg-slate-900 p-3 shadow-card">
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 10, right: 18, bottom: 0, left: 0 }}>
           <CartesianGrid stroke="#2b3847" strokeDasharray="3 3" />

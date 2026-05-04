@@ -5,6 +5,10 @@ export function useDashboard() {
   return useQuery({ queryKey: ["dashboard"], queryFn: api.getDashboard });
 }
 
+export function useLocalAnalytics() {
+  return useQuery({ queryKey: ["local-analytics"], queryFn: api.getLocalAnalytics });
+}
+
 export function useScenarios() {
   return useQuery({ queryKey: ["scenarios"], queryFn: api.getScenarios });
 }

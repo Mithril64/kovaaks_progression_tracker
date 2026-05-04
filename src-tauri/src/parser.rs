@@ -38,7 +38,8 @@ fn parse_key_value(path: &Path, text: &str, source_hash: &str) -> Result<NewRun>
         let Some((key, value)) = line.split_once(':').or_else(|| line.split_once('=')) else {
             continue;
         };
-        fields.insert(normalize_key(key), value.trim().to_string());
+        let value = value.trim().trim_start_matches(',').trim();
+        fields.insert(normalize_key(key), value.to_string());
     }
     build_run(path, source_hash, fields)
 }
@@ -66,15 +67,24 @@ fn build_run(path: &Path, source_hash: &str, fields: HashMap<String, String>) ->
     .or_else(|| scenario_from_filename(path))
     .ok_or_else(|| anyhow!("missing scenario name"))?;
 
-    let score = first_f64(&fields, &["score", "final_score", "high_score", "score_damage"])
-        .ok_or_else(|| anyhow!("missing score"))?;
+    let score = first_f64(
+        &fields,
+        &["score", "final_score", "high_score", "score_damage"],
+    )
+    .ok_or_else(|| anyhow!("missing score"))?;
 
-    let accuracy = first_f64(&fields, &["accuracy", "acc", "avg_accuracy"]).map(normalize_accuracy);
+    let accuracy = first_f64(&fields, &["accuracy", "acc", "avg_accuracy"])
+        .map(normalize_accuracy)
+        .or_else(|| derive_accuracy(&fields));
     let kills = first_i64(&fields, &["kills", "kill_count", "targets_killed"]);
     let weapon = first_string(&fields, &["weapon", "weapon_name"]);
-    let played_at = first_string(&fields, &["played_at", "date", "datetime", "timestamp", "time"])
-        .and_then(|value| parse_time(&value).ok())
-        .unwrap_or_else(|| file_modified_at(path));
+    let played_at = first_string(
+        &fields,
+        &["played_at", "date", "datetime", "timestamp", "time"],
+    )
+    .and_then(|value| parse_time(&value).ok())
+    .or_else(|| timestamp_from_filename(path))
+    .unwrap_or_else(|| file_modified_at(path));
 
     let raw_json = serde_json::to_string(&json!(fields))?;
 
@@ -123,6 +133,14 @@ fn normalize_accuracy(value: f64) -> f64 {
     }
 }
 
+fn derive_accuracy(fields: &HashMap<String, String>) -> Option<f64> {
+    let hits = first_f64(fields, &["hit_count", "hits", "damage_done"])?;
+    let attempts = first_f64(fields, &["shots", "damage_possible"])
+        .or_else(|| first_f64(fields, &["miss_count", "misses"]).map(|misses| hits + misses))?;
+
+    (attempts > 0.0).then(|| (hits / attempts).clamp(0.0, 1.0))
+}
+
 fn parse_time(value: &str) -> Result<String> {
     if let Ok(parsed) = DateTime::parse_from_rfc3339(value) {
         return Ok(parsed.with_timezone(&Utc).to_rfc3339());
@@ -166,6 +184,17 @@ fn scenario_from_filename(path: &Path) -> Option<String> {
     (!scenario.is_empty()).then_some(scenario)
 }
 
+fn timestamp_from_filename(path: &Path) -> Option<String> {
+    let stem = path.file_stem()?.to_string_lossy();
+    let timestamp = stem
+        .rsplit(" - ")
+        .next()
+        .unwrap_or(&stem)
+        .strip_suffix(" Stats")
+        .unwrap_or(&stem);
+    parse_time(timestamp).ok()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -177,5 +206,21 @@ mod tests {
         assert_eq!(run.scenario_name, "1wall6targets small");
         assert_eq!(run.score, 842.4);
         assert_eq!(run.accuracy, Some(0.912));
+    }
+
+    #[test]
+    fn parses_kovaaks_summary_lines_with_colon_comma_values() {
+        let run = parse_key_value(
+            Path::new("1w2ts Perfected - Challenge - 2026.04.08-01.20.51 Stats.csv"),
+            "Kills:,64\nHit Count:,64\nMiss Count:,11\nScore:,64.0\nScenario:,1w2ts Perfected\n",
+            "hash",
+        )
+        .expect("summary parses");
+
+        assert_eq!(run.scenario_name, "1w2ts Perfected");
+        assert_eq!(run.score, 64.0);
+        assert_eq!(run.kills, Some(64));
+        assert_eq!(run.accuracy, Some(64.0 / 75.0));
+        DateTime::parse_from_rfc3339(&run.played_at).expect("filename timestamp is RFC3339");
     }
 }

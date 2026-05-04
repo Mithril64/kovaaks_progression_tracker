@@ -5,22 +5,20 @@ mod models;
 mod parser;
 mod providers;
 
-use crate::{
-    db::Database,
-    models::ImportSummary,
-    parser::parse_stats_file,
-};
+use crate::{db::Database, models::ImportSummary, parser::parse_stats_file};
 use std::path::Path;
 use walkdir::WalkDir;
 
 #[cfg(feature = "desktop")]
+use crate::error::AppError;
+#[cfg(feature = "desktop")]
 use crate::{
     benchmarks::{benchmark_progress, bundled_benchmarks},
     error::AppResult,
-    models::{Benchmark, BenchmarkProgress, Dashboard, OnlineProfile, Run, Scenario},
+    models::{
+        Benchmark, BenchmarkProgress, Dashboard, LocalAnalytics, OnlineProfile, Run, Scenario,
+    },
 };
-#[cfg(feature = "desktop")]
-use crate::error::AppError;
 #[cfg(feature = "desktop")]
 use std::path::PathBuf;
 #[cfg(feature = "desktop")]
@@ -38,6 +36,10 @@ struct AppState {
 #[tauri::command]
 fn detect_stats_folders() -> AppResult<Vec<String>> {
     let mut candidates = Vec::new();
+
+    candidates.push(PathBuf::from(
+        r"C:\Program Files (x86)\Steam\steamapps\common\FPSAimTrainer\FPSAimTrainer\stats",
+    ));
 
     if let Some(local_app_data) = std::env::var_os("LOCALAPPDATA").map(PathBuf::from) {
         candidates.push(local_app_data.join("FPSAimTrainer/FPSAimTrainer/stats"));
@@ -71,10 +73,15 @@ fn select_stats_folder(app: tauri::AppHandle) -> AppResult<Option<String>> {
 fn import_stats(state: tauri::State<'_, AppState>, folder: String) -> AppResult<ImportSummary> {
     let root = PathBuf::from(&folder);
     if !root.is_dir() {
-        return Err(AppError::Message(format!("stats folder does not exist: {folder}")));
+        return Err(AppError::Message(format!(
+            "stats folder does not exist: {folder}"
+        )));
     }
 
-    let db = state.db.lock().map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
     import_folder(&db, &root).map_err(AppError::from)
 }
 
@@ -87,21 +94,40 @@ fn watch_stats_folder(folder: String) -> AppResult<bool> {
 #[cfg(feature = "desktop")]
 #[tauri::command]
 fn get_dashboard(state: tauri::State<'_, AppState>) -> AppResult<Dashboard> {
-    let db = state.db.lock().map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
     db.dashboard().map_err(AppError::from)
 }
 
 #[cfg(feature = "desktop")]
 #[tauri::command]
+fn get_local_analytics(state: tauri::State<'_, AppState>) -> AppResult<LocalAnalytics> {
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    db.local_analytics().map_err(AppError::from)
+}
+
+#[cfg(feature = "desktop")]
+#[tauri::command]
 fn get_scenarios(state: tauri::State<'_, AppState>) -> AppResult<Vec<Scenario>> {
-    let db = state.db.lock().map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
     db.scenarios(None).map_err(AppError::from)
 }
 
 #[cfg(feature = "desktop")]
 #[tauri::command]
 fn get_scenario_runs(state: tauri::State<'_, AppState>, scenario_id: i64) -> AppResult<Vec<Run>> {
-    let db = state.db.lock().map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
     db.scenario_runs(scenario_id).map_err(AppError::from)
 }
 
@@ -117,7 +143,10 @@ fn get_benchmark_progress(
     state: tauri::State<'_, AppState>,
     benchmark_id: String,
 ) -> AppResult<BenchmarkProgress> {
-    let db = state.db.lock().map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
+    let db = state
+        .db
+        .lock()
+        .map_err(|_| AppError::Message("database lock poisoned".to_string()))?;
     benchmark_progress(&db, &state.benchmarks, &benchmark_id).map_err(AppError::from)
 }
 
@@ -144,7 +173,9 @@ pub fn import_folder(db: &Database, root: &Path) -> anyhow::Result<ImportSummary
             },
             Err(error) => {
                 summary.failed += 1;
-                summary.errors.push(format!("{}: {error}", entry.path().display()));
+                summary
+                    .errors
+                    .push(format!("{}: {error}", entry.path().display()));
             }
         }
     }
@@ -179,6 +210,7 @@ pub fn run() {
             detect_stats_folders,
             import_stats,
             watch_stats_folder,
+            get_local_analytics,
             get_scenarios,
             get_scenario_runs,
             get_dashboard,
@@ -200,5 +232,23 @@ mod tests {
         let summary = import_folder(&db, Path::new("../fixtures/stats")).expect("import succeeds");
         assert_eq!(summary.imported, 2);
         assert_eq!(summary.failed, 1);
+    }
+
+    #[test]
+    fn imports_installed_steam_stats_folder_when_available() {
+        let stats = Path::new(
+            r"C:\Program Files (x86)\Steam\steamapps\common\FPSAimTrainer\FPSAimTrainer\stats",
+        );
+        if !stats.is_dir() {
+            return;
+        }
+
+        let db = Database::in_memory().expect("db opens");
+        let summary = import_folder(&db, stats).expect("import succeeds");
+        assert!(
+            summary.imported > 0,
+            "expected imported scores, got {summary:?}"
+        );
+        assert_eq!(summary.failed, 0, "expected every installed score to parse");
     }
 }

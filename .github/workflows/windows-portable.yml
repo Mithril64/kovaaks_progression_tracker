@@ -44,14 +44,11 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Run TypeScript/Vite build
-        run: npm run build
-
       - name: Run frontend tests
         run: npm test
 
       - name: Build Windows executable
-        run: npm run windows:cargo-build
+        run: npm run windows:portable-exe
 
       - name: Create portable zip
         run: npm run windows:portable

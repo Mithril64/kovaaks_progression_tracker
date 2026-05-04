@@ -2,7 +2,7 @@
 
 The preferred release path is GitHub Actions on `windows-latest`. Native Windows builds avoid Linux WebKitGTK setup and avoid the rough edges of cross-compiling a Tauri desktop app from Linux.
 
-The portable workflow intentionally uses `cargo build --release --features desktop` instead of `tauri build`. That avoids generating MSI/NSIS installers and avoids running the frontend build twice. The workflow builds the frontend once, compiles the Windows executable once, and zips the result.
+The portable workflow uses `tauri build --no-bundle` instead of raw `cargo build`. That avoids generating MSI/NSIS installers while still letting Tauri run the release build path that embeds the Vite `dist` assets into the executable. The finished app does not need a localhost web server.
 
 ## Portable Zip
 
@@ -52,8 +52,7 @@ On a Windows machine:
 
 ```powershell
 npm ci
-npm run build
-npm run windows:cargo-build
+npm run windows:portable-exe
 npm run windows:portable
 ```
 

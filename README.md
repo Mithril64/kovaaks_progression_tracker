@@ -6,6 +6,8 @@ Windows is the supported product target. Linux is useful for frontend developmen
 
 ## Development
 
+New contributors should start with [docs/contributing.md](docs/contributing.md). It explains the frontend routes, Tauri commands, SQLite/import flow, benchmark metadata, Kovaak API resolution, and the expected verification commands.
+
 Fresh Arch setup:
 
 ```bash
@@ -44,6 +46,19 @@ npm run rust:test
 
 The browser-only Vite app uses mock data. The Windows Tauri app persists imported stats to SQLite in the app data directory.
 
+## Codebase Map
+
+- `src/routes/`: top-level React pages for dashboard, benchmark library/rank table, and scenario detail.
+- `src/lib/api.ts`: Tauri command boundary plus browser-mode mocks.
+- `src/lib/queries.ts`: TanStack Query hooks used by React pages.
+- `src-tauri/src/lib.rs`: Tauri command registration and app state setup.
+- `src-tauri/src/db.rs`: SQLite schema bootstrap, inserts, dedupe, dashboard queries, and local analytics.
+- `src-tauri/src/parser.rs`: forgiving Kovaak local stat parser.
+- `src-tauri/src/benchmarks.rs`: bundled benchmark metadata and Kovaak benchmark API resolution.
+- `fixtures/benchmarks/`: Evxl-style benchmark JSON definitions bundled with the app.
+
+See [docs/contributing.md](docs/contributing.md) for the detailed walkthrough.
+
 ## Windows Portable Build
 
 The preferred packaging path is GitHub Actions. Run the `Windows Portable` workflow to produce:
@@ -58,8 +73,7 @@ For a local native Windows build:
 
 ```powershell
 npm ci
-npm run build
-npm run windows:cargo-build
+npm run windows:portable-exe
 npm run windows:portable
 ```
 
@@ -78,6 +92,7 @@ make github-release-download TAG=v0.1.0
 
 The app auto-detects these Windows stats folders when they exist:
 
+- `C:\Program Files (x86)\Steam\steamapps\common\FPSAimTrainer\FPSAimTrainer\stats`
 - `%LOCALAPPDATA%\FPSAimTrainer\FPSAimTrainer\stats`
 - `%USERPROFILE%\AppData\Local\FPSAimTrainer\FPSAimTrainer\stats`
 - `%USERPROFILE%\AppData\LocalLow\FPSAimTrainer\FPSAimTrainer\stats`

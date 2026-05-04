@@ -16,7 +16,7 @@ export default {
         warn: "#f08a5d"
       },
       boxShadow: {
-        subtle: "0 10px 30px rgba(0, 0, 0, 0.22)"
+        card: "0 6px 18px rgba(0, 0, 0, 0.28)"
       }
     },
   },

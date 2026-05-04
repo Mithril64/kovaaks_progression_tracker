@@ -18,7 +18,7 @@ describe("DashboardPage", () => {
       </QueryClientProvider>,
     );
 
-    expect(await screen.findByText("1wall6targets small")).toBeInTheDocument();
+    expect((await screen.findAllByText("1wall6targets small")).length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText("Search scenarios")).toBeInTheDocument();
   });
 });
