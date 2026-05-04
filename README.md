@@ -6,6 +6,16 @@ Windows is the supported product target. Linux is useful for frontend developmen
 
 ## Development
 
+Fresh Ubuntu/WSL setup:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y make
+make bootstrap
+```
+
+The bootstrap target installs base Ubuntu build tools, Node.js 22, Rust stable, npm dependencies, Playwright Chromium, and runs the verification suite.
+
 ```bash
 npm install
 npm run windows:dev
@@ -41,3 +51,5 @@ The app auto-detects these Windows stats folders when they exist:
 On native Linux, use `npm run dev`, `npm run build`, `npm test`, and `npm run rust:test`.
 
 Running the Tauri shell natively on Linux requires Linux WebKitGTK system packages even though Linux is not a supported app target. For Windows packaging, prefer a Windows machine or WSL/CI setup specifically configured for Tauri Windows builds.
+
+The Makefile intentionally does not install Linux Tauri desktop packages during `make bootstrap`. If you want to experiment with the native Linux Tauri shell anyway, run `make linux-tauri-deps`.
