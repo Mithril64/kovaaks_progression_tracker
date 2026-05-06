@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { BarChart3, BookOpen, ExternalLink, Play } from "lucide-react";
+import { BarChart3, BookOpen, ExternalLink, Layers, Play, Sparkles, Target, Trophy } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useBenchmarkProgress, useBenchmarks, useScenarios } from "../lib/queries";
 import type {
@@ -49,23 +49,51 @@ export function BenchmarksPage() {
     return { played, ranked, total: scenarios?.length ?? 0 };
   }, [activeDifficulty]);
 
+  const playedPct = totals.total > 0 ? (totals.played / totals.total) * 100 : 0;
+  const rankedPct = totals.total > 0 ? (totals.ranked / totals.total) * 100 : 0;
+
   return (
-    <div className="space-y-4">
-      <section className="rounded border border-slate-700 bg-slate-900 p-4 shadow-card">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-200">Benchmark Library</p>
-            <h2 className="mt-1 text-xl font-semibold text-slate-50">
-              {selectedBenchmark?.benchmarkName ?? "Select a benchmark"}
+    <div className="space-y-5">
+      <section className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-gradient-to-br from-violet-500/15 via-panel/70 to-magenta-500/10 p-5 shadow-card">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-20 -top-20 h-72 w-72 rounded-full bg-violet-400/15 blur-3xl"
+        />
+        <div className="relative flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+          <div className="space-y-2">
+            <p className="inline-flex items-center gap-1.5 rounded-full border border-violet-400/30 bg-violet-400/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-violet-400">
+              <Sparkles size={11} /> Benchmark Library
+            </p>
+            <h2 className="text-2xl font-extrabold tracking-tight text-ink sm:text-3xl">
+              {selectedBenchmark ? (
+                <span className="text-gradient">{selectedBenchmark.benchmarkName}</span>
+              ) : (
+                <>Pick a <span className="text-gradient">benchmark</span> to compare</>
+              )}
             </h2>
-            <p className="text-sm text-slate-300">
+            <p className="max-w-2xl text-sm text-muted">
               Browse bundled benchmark metadata first; Kovaak scenario resolution starts only after selection.
             </p>
           </div>
-          <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
-            <Stat label="Benchmarks" value={String(benchmarks.data?.length ?? 0)} />
-            <Stat label="Selected" value={selectedBenchmark?.abbreviation ?? "-"} />
-            <Stat label="Lookup" value={selectedId ? (progress.isFetching ? "Resolving" : "Ready") : "Idle"} />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <HeroStat
+              label="Benchmarks"
+              value={String(benchmarks.data?.length ?? 0)}
+              icon={<Layers size={14} />}
+              tone="violet"
+            />
+            <HeroStat
+              label="Selected"
+              value={selectedBenchmark?.abbreviation ?? "-"}
+              icon={<Target size={14} />}
+              tone="cyan"
+            />
+            <HeroStat
+              label="Lookup"
+              value={selectedId ? (progress.isFetching ? "Resolving" : "Ready") : "Idle"}
+              icon={<Sparkles size={14} />}
+              tone="magenta"
+            />
           </div>
         </div>
       </section>
@@ -85,17 +113,17 @@ export function BenchmarksPage() {
       </section>
 
       {progress.data ? (
-        <section className="rounded border border-slate-700 bg-slate-900 p-4 shadow-card">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
+        <section className="overflow-hidden rounded-xl border border-white/[0.06] bg-panel/70 shadow-card backdrop-blur">
+          <div className="flex flex-col gap-4 border-b border-white/[0.05] p-4 xl:flex-row xl:items-center xl:justify-between">
             <div className="flex flex-wrap gap-2">
               {progress.data.difficulties.map((difficulty) => (
                 <button
                   key={difficulty.difficultyName}
                   type="button"
-                  className={`rounded border px-3 py-2 text-sm font-semibold ${
+                  className={`rounded-full px-3 py-1.5 text-xs font-bold uppercase tracking-[0.14em] transition ${
                     activeDifficulty?.difficultyName === difficulty.difficultyName
-                      ? "border-cyan-300 bg-cyan-400 text-slate-950"
-                      : "border-slate-700 bg-slate-800 text-slate-200 hover:border-slate-500"
+                      ? "bg-gradient-to-r from-accent-400 via-violet-400 to-magenta-400 text-base shadow-glow"
+                      : "border border-white/[0.08] bg-base/40 text-muted hover:border-violet-400/40 hover:text-ink"
                   }`}
                   onClick={() => setSelectedDifficulty(difficulty.difficultyName)}
                 >
@@ -104,10 +132,27 @@ export function BenchmarksPage() {
               ))}
             </div>
             {activeDifficulty ? (
-              <div className="grid gap-3 text-sm text-slate-300 sm:grid-cols-3">
-                <Stat label="Resolved" value={`${activeDifficulty.resolvedScenarioCount}/${activeDifficulty.scenarioCount}`} />
-                <Stat label="Played" value={`${totals.played}/${totals.total}`} />
-                <Stat label="Ranked" value={`${totals.ranked}/${totals.total}`} />
+              <div className="grid gap-3 sm:grid-cols-3">
+                <ProgressStat
+                  label="Resolved"
+                  numerator={activeDifficulty.resolvedScenarioCount}
+                  denominator={activeDifficulty.scenarioCount}
+                  tone="cyan"
+                />
+                <ProgressStat
+                  label="Played"
+                  numerator={totals.played}
+                  denominator={totals.total}
+                  tone="lime"
+                  pct={playedPct}
+                />
+                <ProgressStat
+                  label="Ranked"
+                  numerator={totals.ranked}
+                  denominator={totals.total}
+                  tone="gold"
+                  pct={rankedPct}
+                />
               </div>
             ) : null}
           </div>
@@ -116,7 +161,7 @@ export function BenchmarksPage() {
       ) : null}
 
       {activeDifficulty?.resolutionError ? (
-        <section className="rounded border border-orange-400 bg-slate-900 p-4 text-sm text-orange-200 shadow-card">
+        <section className="rounded-xl border border-warn/40 bg-panel/70 p-4 text-sm text-warn shadow-card">
           Could not resolve scenarios from Kovaak right now: {activeDifficulty.resolutionError}
         </section>
       ) : null}
@@ -126,16 +171,80 @@ export function BenchmarksPage() {
       ) : null}
 
       {progress.isError ? (
-        <section className="rounded border border-orange-400 bg-slate-900 p-4 text-sm text-orange-300 shadow-card">
+        <section className="rounded-xl border border-warn/40 bg-panel/70 p-4 text-sm text-warn shadow-card">
           Benchmark progress failed to load.
         </section>
       ) : null}
 
       {!selectedId ? (
-        <section className="rounded border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400 shadow-card">
+        <section className="rounded-xl border border-violet-400/20 bg-panel/60 p-4 text-sm text-muted shadow-card">
           Select a benchmark above to resolve its Kovaak scenarios and compare the thresholds against your local PBs.
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function HeroStat({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: string;
+  icon: React.ReactNode;
+  tone: "cyan" | "violet" | "magenta";
+}) {
+  const palette = {
+    cyan: "border-accent-400/30 bg-accent-400/10 text-accent-200",
+    violet: "border-violet-400/30 bg-violet-400/10 text-violet-400",
+    magenta: "border-magenta-400/30 bg-magenta-400/10 text-magenta-400",
+  } as const;
+  return (
+    <div className={`rounded-xl border p-3 backdrop-blur ${palette[tone]}`}>
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] opacity-80">{label}</p>
+        {icon}
+      </div>
+      <p className="mt-1 text-lg font-bold leading-tight">{value}</p>
+    </div>
+  );
+}
+
+function ProgressStat({
+  label,
+  numerator,
+  denominator,
+  tone,
+  pct,
+}: {
+  label: string;
+  numerator: number;
+  denominator: number;
+  tone: "cyan" | "lime" | "gold";
+  pct?: number;
+}) {
+  const palette = {
+    cyan: { text: "text-accent-200", bar: "from-accent-400 to-violet-400" },
+    lime: { text: "text-lime-400", bar: "from-lime-400 to-accent-400" },
+    gold: { text: "text-gold-400", bar: "from-gold-400 to-magenta-400" },
+  } as const;
+  const t = palette[tone];
+  const value = pct ?? (denominator > 0 ? (numerator / denominator) * 100 : 0);
+  return (
+    <div className="rounded-xl border border-white/[0.06] bg-base/40 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">{label}</p>
+        <p className={`text-xs font-bold ${t.text}`}>{Math.round(value)}%</p>
+      </div>
+      <p className="mt-1 text-base font-bold text-ink">
+        {numerator}
+        <span className="text-sm font-medium text-muted">/{denominator}</span>
+      </p>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+        <div className={`h-full rounded-full bg-gradient-to-r ${t.bar}`} style={{ width: `${Math.max(2, Math.min(100, value))}%` }} />
+      </div>
     </div>
   );
 }
@@ -165,35 +274,51 @@ function BenchmarkCard({
   return (
     <button
       type="button"
-      className={`rounded border bg-slate-900 p-4 text-left shadow-card transition ${
-        selected ? "border-cyan-300 ring-1 ring-cyan-300" : "border-slate-700 hover:border-slate-500"
+      className={`group relative overflow-hidden rounded-xl border p-4 text-left transition ${
+        selected
+          ? "border-transparent bg-panel/80 shadow-glow"
+          : "border-white/[0.06] bg-panel/60 hover:-translate-y-0.5 hover:border-violet-400/30 hover:shadow-card"
       }`}
       onClick={onSelect}
     >
-      <div className="mb-3 flex items-start justify-between gap-3">
+      {selected ? (
+        <span aria-hidden className="absolute inset-x-0 top-0 h-[2px] bg-accent-stripe" />
+      ) : null}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full opacity-50 blur-2xl transition group-hover:opacity-80"
+        style={{ backgroundColor: benchmark.color ?? "#a78bfa", opacity: selected ? 0.45 : 0.18 }}
+      />
+      <div className="relative mb-3 flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted">
             {benchmark.abbreviation ?? benchmark.rankCalculation}
           </p>
-          <h3 className="truncate text-base font-semibold text-slate-50">{benchmark.benchmarkName}</h3>
+          <h3 className="truncate text-base font-bold text-ink">{benchmark.benchmarkName}</h3>
         </div>
-        <span className="h-4 w-4 shrink-0 rounded-sm" style={{ backgroundColor: benchmark.color ?? "#22d3ee" }} />
+        <span
+          className="h-5 w-5 shrink-0 rounded-md ring-1 ring-white/20"
+          style={{ backgroundColor: benchmark.color ?? "#a78bfa" }}
+        />
       </div>
-      <div className="grid grid-cols-3 gap-2 text-sm">
-        <CardMetric label="Difficulties" value={benchmark.difficulties.length} />
-        <CardMetric label="Scenarios" value={scenarioCount} />
-        <CardMetric label="Added" value={benchmark.dateAdded?.slice(0, 4) ?? "-"} />
+      <div className="relative grid grid-cols-3 gap-2 text-sm">
+        <CardMetric label="Difficulties" value={benchmark.difficulties.length} icon={<Layers size={12} />} />
+        <CardMetric label="Scenarios" value={scenarioCount} icon={<Target size={12} />} />
+        <CardMetric label="Added" value={benchmark.dateAdded?.slice(0, 4) ?? "-"} icon={<Sparkles size={12} />} />
       </div>
-      <p className="mt-3 line-clamp-2 text-xs text-slate-400">{difficultyNames}</p>
+      <p className="relative mt-3 line-clamp-2 text-xs text-subtle">{difficultyNames}</p>
     </button>
   );
 }
 
-function CardMetric({ label, value }: { label: string; value: string | number }) {
+function CardMetric({ label, value, icon }: { label: string; value: string | number; icon: React.ReactNode }) {
   return (
-    <div className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5">
-      <p className="text-[10px] uppercase tracking-[0.12em] text-slate-500">{label}</p>
-      <p className="font-semibold text-slate-100">{value}</p>
+    <div className="rounded-lg border border-white/[0.06] bg-base/50 px-2 py-1.5">
+      <p className="flex items-center gap-1 text-[10px] uppercase tracking-[0.12em] text-muted">
+        {icon}
+        {label}
+      </p>
+      <p className="mt-0.5 font-bold text-ink">{value}</p>
     </div>
   );
 }
@@ -210,31 +335,34 @@ function BenchmarkRankTable({
 
   if (rows.length === 0) {
     return (
-      <section className="rounded border border-slate-700 bg-slate-900 p-4 text-sm text-slate-400 shadow-card">
+      <section className="rounded-xl border border-violet-400/20 bg-panel/60 p-4 text-sm text-muted shadow-card">
         Scenario names will appear after Kovaak API resolution succeeds.
       </section>
     );
   }
 
   return (
-    <section className="w-full max-w-full overflow-hidden rounded border border-slate-700 bg-[#1b1b1c] shadow-card">
-      <div className="flex flex-col gap-3 border-b border-slate-700 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-100">
-            {difficulty.difficultyName} Rank Table
-          </h3>
-          <p className="text-xs text-slate-400">
-            Scores are your local PBs; rank bands are Kovaak benchmark thresholds.
-          </p>
+    <section className="w-full max-w-full overflow-hidden rounded-xl border border-white/[0.06] bg-panel/70 shadow-card backdrop-blur">
+      <div className="flex flex-col gap-3 border-b border-white/[0.05] px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex items-center gap-3">
+          <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-magenta-400/30 bg-magenta-400/10 text-magenta-400">
+            <Trophy size={14} />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold uppercase tracking-[0.16em] text-ink">
+              {difficulty.difficultyName} Rank Table
+            </h3>
+            <p className="text-xs text-muted">Scores are your local PBs; rank bands are Kovaak benchmark thresholds.</p>
+          </div>
         </div>
         <div className="flex flex-wrap gap-2">
           {rankEntries.map(([rank, color]) => (
             <span
               key={rank}
-              className="inline-flex items-center gap-1.5 rounded border border-white/10 bg-slate-950 px-2 py-1 text-xs font-semibold text-slate-100"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/[0.06] bg-base/50 px-2 py-1 text-[11px] font-bold text-ink"
             >
               <span className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: color }} />
-              {rank}
+              <span style={{ color }}>{rank}</span>
             </span>
           ))}
         </div>
@@ -242,17 +370,17 @@ function BenchmarkRankTable({
 
       <div className="max-w-full overflow-x-auto overflow-y-hidden">
         <table className="w-max min-w-full border-collapse text-left text-xs">
-          <thead className="bg-[#111112] text-[11px] uppercase tracking-[0.14em] text-slate-200">
+          <thead className="bg-base/60 text-[11px] uppercase tracking-[0.14em] text-muted">
             <tr>
-              <th className="w-7 border-b border-slate-700 px-2 py-2" />
-              <th className="w-8 border-b border-slate-700 px-2 py-2" />
-              <th className="border-b border-slate-700 px-3 py-2">Scenario</th>
-              <th className="w-28 border-b border-slate-700 px-3 py-2 text-right">Score</th>
-              <th className="w-16 border-b border-slate-700 px-2 py-2 text-center">
+              <th className="w-7 border-b border-white/[0.05] px-2 py-2" />
+              <th className="w-8 border-b border-white/[0.05] px-2 py-2" />
+              <th className="border-b border-white/[0.05] px-3 py-2">Scenario</th>
+              <th className="w-28 border-b border-white/[0.05] px-3 py-2 text-right">Score</th>
+              <th className="w-16 border-b border-white/[0.05] px-2 py-2 text-center">
                 <BarChart3 size={14} aria-label="Rank progress" />
               </th>
               {rankEntries.map(([rank, color]) => (
-                <th key={rank} className="border-b border-slate-700 px-1.5 py-2 text-center">
+                <th key={rank} className="border-b border-white/[0.05] px-1.5 py-2 text-center">
                   <span style={{ color }}>{rank}</span>
                 </th>
               ))}
@@ -290,11 +418,11 @@ function RankTableRow({
   const progress = scenario ? rankProgressPercent(scenario) : null;
 
   return (
-    <tr className="border-b border-white/[0.055] bg-[#1f1f20] text-slate-300 hover:bg-[#252527]">
+    <tr className="border-b border-white/[0.04] bg-panel/40 text-muted hover:bg-violet-500/[0.06]">
       {row.showCategory ? (
         <td
           rowSpan={row.categorySpan}
-          className="border-r border-white/[0.07] px-1 py-2 text-center align-middle"
+          className="border-r border-white/[0.05] px-1 py-2 text-center align-middle"
           style={{ color: row.category.color }}
         >
           <div className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.18em]">
@@ -305,7 +433,7 @@ function RankTableRow({
       {row.showSubcategory ? (
         <td
           rowSpan={row.subcategorySpan}
-          className="border-r border-white/[0.07] px-1 py-2 text-center align-middle"
+          className="border-r border-white/[0.05] px-1 py-2 text-center align-middle"
           style={{ color: row.subcategory.color }}
         >
           <div className="[writing-mode:vertical-rl] rotate-180 whitespace-nowrap text-[10px] font-bold uppercase tracking-[0.16em]">
@@ -316,51 +444,49 @@ function RankTableRow({
       <td className="max-w-[360px] px-3 py-2">
         {scenario ? (
           <div className="flex min-w-0 items-center gap-2">
-            <BookOpen size={14} className="shrink-0 text-slate-400" aria-hidden />
+            <BookOpen size={14} className="shrink-0 text-subtle" aria-hidden />
             <div className="min-w-0">
               {localScenarioId ? (
                 <Link
                   to="/scenario/$scenarioId"
                   params={{ scenarioId: String(localScenarioId) }}
-                  className="block truncate font-semibold text-slate-100 hover:text-cyan-300"
+                  className="block truncate font-bold text-ink hover:text-accent-200"
                 >
                   {scenario.scenarioName}
                 </Link>
               ) : (
-                <span className="block truncate font-semibold text-slate-100">{scenario.scenarioName}</span>
+                <span className="block truncate font-bold text-ink">{scenario.scenarioName}</span>
               )}
             </div>
-            <div className="ml-auto flex shrink-0 items-center gap-2 text-slate-500">
+            <div className="ml-auto flex shrink-0 items-center gap-2 text-subtle">
               <BarChart3 size={13} aria-hidden />
               <ExternalLink size={13} aria-hidden />
               <Play size={13} aria-hidden />
             </div>
           </div>
         ) : (
-          <span className="text-slate-500">Unresolved scenario</span>
+          <span className="text-subtle">Unresolved scenario</span>
         )}
       </td>
       <td className="px-3 py-2 text-right">
         {scenario ? (
-          <div>
+          <div className="flex flex-col items-end">
             <span className="font-bold" style={{ color: currentColor ?? "#c4b5fd" }}>
               {scenario.personalBest == null ? "-" : formatScore(scenario.personalBest)}
             </span>
-            <span className="ml-2 text-slate-500">{progress == null ? "0%" : `${progress}%`}</span>
+            <span className="text-[10px] text-subtle">{progress == null ? "0%" : `${progress}%`}</span>
           </div>
         ) : (
-          <span className="text-slate-500">-</span>
+          <span className="text-subtle">-</span>
         )}
       </td>
-      <td className="px-2 py-2 text-center font-semibold text-slate-500">
-        {scenario?.currentRank ?? "UR"}
-      </td>
+      <td className="px-2 py-2 text-center font-bold text-subtle">{scenario?.currentRank ?? "UR"}</td>
       {rankEntries.map(([rank, color]) => (
         <td key={rank} className="px-1.5 py-1.5">
           {scenario ? (
             <RankCell rank={rank} color={color} scenario={scenario} />
           ) : (
-            <div className="h-5 rounded-sm bg-slate-800" />
+            <div className="h-5 rounded-sm bg-white/[0.04]" />
           )}
         </td>
       ))}
@@ -386,12 +512,12 @@ function RankCell({
       className="relative h-5 min-w-[84px] overflow-hidden rounded-sm text-center text-[11px] font-extrabold leading-5"
       style={{
         background: threshold
-          ? `linear-gradient(135deg, ${color}, ${shadeColor(color, achieved ? -12 : -28)})`
-          : "#151516",
-        boxShadow: current ? `0 0 0 1px ${color}, 0 0 12px ${hexToRgba(color, 0.35)}` : undefined,
+          ? `linear-gradient(135deg, ${color}, ${shadeColor(color, achieved ? -12 : -32)})`
+          : "rgba(255, 255, 255, 0.03)",
+        boxShadow: current ? `0 0 0 1px ${color}, 0 0 14px ${hexToRgba(color, 0.45)}` : undefined,
         clipPath: "polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%)",
         color: readableTextColor(color),
-        opacity: achieved || current ? 1 : 0.48,
+        opacity: achieved || current ? 1 : 0.42,
       }}
       title={threshold ? `${rank}: ${formatScore(threshold.score)}` : `${rank}: no threshold`}
     >
@@ -402,26 +528,17 @@ function RankCell({
 
 function DifficultyMeta({ difficulty }: { difficulty: BenchmarkDifficultyProgress }) {
   return (
-    <div className="mt-4 flex flex-col gap-3 border-t border-slate-800 pt-4 lg:flex-row lg:items-center lg:justify-between">
-      <div className="text-sm text-slate-300">
-        <span className="font-semibold text-slate-100">{difficulty.difficultyName}</span>
-        <span className="mx-2 text-slate-600">/</span>
+    <div className="flex flex-col gap-2 px-4 py-3 text-xs lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-wrap items-center gap-2 text-muted">
+        <span className="font-bold text-ink">{difficulty.difficultyName}</span>
+        <span className="text-subtle">·</span>
         <span>ID {difficulty.kovaaksBenchmarkId}</span>
-        <span className="mx-2 text-slate-600">/</span>
-        <span>{difficulty.sharecode}</span>
+        <span className="text-subtle">·</span>
+        <span className="font-mono text-accent-200">{difficulty.sharecode}</span>
       </div>
-      <p className="text-xs text-slate-500">
+      <p className="text-[11px] text-subtle">
         {difficulty.resolvedScenarioCount} resolved from Kovaak, {difficulty.scenarioCount} expected from metadata.
       </p>
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded border border-slate-800 bg-slate-950 px-3 py-2">
-      <p className="text-xs uppercase tracking-[0.14em] text-slate-500">{label}</p>
-      <p className="text-base font-semibold text-slate-100">{value}</p>
     </div>
   );
 }
